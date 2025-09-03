@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebP to PNG Converter</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        
+        p {
+            color: #718096;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        
+        .upload-area {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 40px 20px;
+            margin-bottom: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #4299e1;
+            background-color: #ebf4ff;
+        }
+        
+        .upload-area i {
+            font-size: 48px;
+            color: #4299e1;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .btn {
+            background-color: #4299e1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            display: inline-block;
+            margin: 10px 5px;
+        }
+        
+        .btn:hover {
+            background-color: #3182ce;
+        }
+        
+        .btn:disabled {
+            background-color: #cbd5e0;
+            cursor: not-allowed;
+        }
+        
+        .preview-container {
+            margin: 25px 0;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .preview-box {
+            width: 100%;
+            max-width: 250px;
+            position: relative;
+        }
+        
+        .preview-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2d3748;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            color: #718096;
+            border: 1px solid #cbd5e0;
+            transition: all 0.2s ease;
+        }
+        
+        .remove-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            color: #e53e3e;
+            border-color: #e53e3e;
+            transform: scale(1.1);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .status {
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background-color: #c6f6d5;
+            color: #2d7d32;
+        }
+        
+        .status.error {
+            background-color: #fed7d7;
+            color: #c53030;
+        }
+        
+        .note {
+            background-color: #fffaf0;
+            border-left: 4px solid #f6ad55;
+            padding: 12px;
+            text-align: left;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .signature {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            font-size: 12px;
+            color: #718096;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .signature a {
+            color: #4299e1;
+            text-decoration: none;
+        }
+        
+        .signature a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .preview-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .signature {
+                position: static;
+                margin-top: 20px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WebP to PNG Converter</h1>
+        <p>Convert your WebP images to PNG format instantly in your browser</p>
+        
+        <div id="upload-area" class="upload-area">
+            <i>📁</i>
+            <p>Drag & drop your WebP image here or click to browse</p>
+            <input type="file" id="file-input" class="file-input" accept=".webp">
+        </div>
+        
+        <div id="status" class="status hidden"></div>
+        
+        <button id="convert-btn" class="btn" disabled>Convert to PNG</button>
+        <a id="download-btn" class="btn hidden" download="converted.png">Download PNG</a>
+        
+        <div id="preview-container" class="preview-container hidden">
+            <div class="preview-box">
+                <div class="preview-title">Original WebP</div>
+                <div class="image-wrapper">
+                    <img id="original-preview" class="preview-image">
+                    <div id="remove-original" class="remove-btn hidden">X</div>
+                </div>
+            </div>
+            <div class="preview-box">
+                <div class="preview-title">Converted PNG</div>
+                <div class="image-wrapper">
+                    <img id="converted-preview" class="preview-image">
+                    <div id="remove-converted" class="remove-btn hidden">X</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="note">
+            <p><strong>Note:</strong> This tool works entirely in your browser. Your images are not uploaded to any server.</p>
+            <p>Supported in modern browsers (Chrome, Firefox, Edge, Safari 14+).</p>
+        </div>
+    </div>
+
+    <div class="signature">
+        Created by: <a href="mailto:siniestros7@gmail.com">Siniestro</a> | 
+        <a href="https://github.com/placeholder/repo" target="_blank">GitHub Repo</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('file-input');
+            const convertBtn = document.getElementById('convert-btn');
+            const downloadBtn = document.getElementById('download-btn');
+            const statusDiv = document.getElementById('status');
+            const previewContainer = document.getElementById('preview-container');
+            const originalPreview = document.getElementById('original-preview');
+            const convertedPreview = document.getElementById('converted-preview');
+            const removeOriginalBtn = document.getElementById('remove-original');
+            const removeConvertedBtn = document.getElementById('remove-converted');
+            
+            let currentFile = null;
+            
+            // Click on upload area to trigger file input
+            uploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // Drag and drop handling
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                
+                if (e.dataTransfer.files.length) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+            
+            // File input change handler
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length) {
+                    handleFile(fileInput.files[0]);
+                }
+            });
+            
+            // Convert button handler
+            convertBtn.addEventListener('click', convertWebPtoPNG);
+            
+            // Remove original image button handler
+            removeOriginalBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                resetConverter();
+            });
+            
+            // Remove converted image button handler
+            removeConvertedBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                // Only remove the converted image, keep the original
+                convertedPreview.src = '';
+                removeConvertedBtn.classList.add('hidden');
+                downloadBtn.classList.add('hidden');
+                hideStatus();
+            });
+            
+            // Handle the selected file
+            function handleFile(file) {
+                if (!file.type.match('image/webp')) {
+                    showStatus('Please select a WebP image.', 'error');
+                    return;
+                }
+                
+                currentFile = file;
+                
+                // Preview the original image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    originalPreview.src = e.target.result;
+                    previewContainer.classList.remove('hidden');
+                    removeOriginalBtn.classList.remove('hidden');
+                    convertBtn.disabled = false;
+                    hideStatus();
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            // Convert WebP to PNG
+            function convertWebPtoPNG() {
+                if (!currentFile) return;
+                
+                const img = new Image();
+                img.onload = function() {
+                    // Create canvas with the same dimensions as the image
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    
+                    // Draw image on canvas
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Convert canvas to PNG data URL
+                    try {
+                        const pngDataUrl = canvas.toDataURL('image/png');
+                        
+                        // Show converted preview
+                        convertedPreview.src = pngDataUrl;
+                        removeConvertedBtn.classList.remove('hidden');
+                        
+                        // Enable download button
+                        downloadBtn.href = pngDataUrl;
+                        downloadBtn.classList.remove('hidden');
+                        
+                        showStatus('Conversion successful!', 'success');
+                    } catch (error) {
+                        showStatus('Conversion failed. Please try another image.', 'error');
+                        console.error('Conversion error:', error);
+                    }
+                };
+                
+                img.onerror = function() {
+                    showStatus('Error loading image. Please try another file.', 'error');
+                };
+                
+                // Load the image from the file
+                img.src = URL.createObjectURL(currentFile);
+            }
+            
+            // Reset the converter to initial state
+            function resetConverter() {
+                currentFile = null;
+                fileInput.value = '';
+                originalPreview.src = '';
+                convertedPreview.src = '';
+                removeOriginalBtn.classList.add('hidden');
+                removeConvertedBtn.classList.add('hidden');
+                previewContainer.classList.add('hidden');
+                convertBtn.disabled = true;
+                downloadBtn.classList.add('hidden');
+                hideStatus();
+            }
+            
+            // Show status message
+            function showStatus(message, type) {
+                statusDiv.textContent = message;
+                statusDiv.className = `status ${type}`;
+                statusDiv.classList.remove('hidden');
+            }
+            
+            // Hide status message
+            function hideStatus() {
+                statusDiv.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
